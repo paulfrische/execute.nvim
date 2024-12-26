@@ -1,11 +1,14 @@
 local M = {}
 
----@alias exec.runner function(string) -> string[]
+-- TODO: add support for compiled languages by adding helpers to create tmpfiles/tmpdirs to compile and run code in
+
+---@alias exec.runner fun(string): string[]
 
 ---@class exec.Options
 ---@field runners { [string]: exec.runner}
 
 -- create runner that executes 'e <file containing code>'
+---@nodiscard
 ---@param e string
 ---@return exec.runner
 M.make_simple_runner = function(e)
@@ -19,6 +22,7 @@ M.make_simple_runner = function(e)
   end
 end
 
+---@nodiscard
 ---@return string[]
 local selected_text = function()
   vim.cmd('normal! \28\14')
@@ -30,8 +34,15 @@ end
 local state = {
   ---@type { [string]: exec.runner}
   runners = {
-    python = M.make_simple_runner('python'),
     javascript = M.make_simple_runner('node'),
+    lua = function(_)
+      vim.fn.feedkeys('gv', 'n')
+      vim.cmd('\'<,\'>source')
+      vim.cmd('normal! \28\14')
+      return {}
+    end,
+    python = M.make_simple_runner('python'),
+    sh = M.make_simple_runner('bash'),
   },
 }
 
